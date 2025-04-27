@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brave cURL Generator</title>
+    <style>
+        :root {
+            --brave-dark: #1E2029;
+            --brave-light: #F0F2FF;
+            --brave-primary: #FB542B;
+            --brave-secondary: #696FDC;
+            --brave-accent: #FF7D33;
+            --text-primary: #1E2029;
+            --text-secondary: #5E6175;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--brave-light);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            color: var(--brave-primary);
+            font-weight: bold;
+            font-size: 24px;
+        }
+
+        .logo-text {
+            font-weight: 700;
+            font-size: 20px;
+            background: linear-gradient(90deg, var(--brave-primary), var(--brave-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .request-container {
+            display: flex;
+            margin-bottom: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .method-select {
+            width: 120px;
+            padding: 12px;
+            border: none;
+            background-color: white;
+            font-weight: 600;
+            color: var(--text-primary);
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+        }
+
+        .url-input {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 14px;
+        }
+
+        .generate-btn {
+            padding: 0 20px;
+            background-color: var(--brave-primary);
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .generate-btn:hover {
+            background-color: #e04a24;
+        }
+
+        .tab-bar {
+            display: flex;
+            background-color: white;
+            border-radius: 8px 8px 0 0;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.1);
+            border-bottom: none;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-secondary);
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: var(--text-primary);
+        }
+
+        .tab.active {
+            color: var(--brave-primary);
+            font-weight: 600;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--brave-primary);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background-color: white;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.1);
+            border-top: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .key-value-container {
+            margin-bottom: 15px;
+        }
+
+        .key-value-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .key-value-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 6px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 13px;
+        }
+
+        .remove-btn {
+            width: 40px;
+            background-color: #FFEBEE;
+            color: #C62828;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .remove-btn:hover {
+            background-color: #FFCDD2;
+        }
+
+        .add-btn {
+            padding: 8px 16px;
+            background-color: #E3F2FD;
+            color: var(--brave-secondary);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .add-btn:hover {
+            background-color: #BBDEFB;
+        }
+
+        .result-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .result-title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .copy-btn {
+            padding: 6px 12px;
+            background-color: var(--brave-secondary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background-color: #5A60C0;
+        }
+
+        .result-content {
+            font-family: 'Roboto Mono', monospace;
+            white-space: pre-wrap;
+            background-color: var(--brave-light);
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+
+        /* Method-specific colors */
+        .method-get { color: #4CAF50; }
+        .method-post { color: #2196F3; }
+        .method-put { color: #FF9800; }
+        .method-delete { color: #F44336; }
+        .method-patch { color: #9C27B0; }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --brave-light: #1E2029;
+                --text-primary: #F0F2FF;
+                --text-secondary: #A0A3BD;
+            }
+            
+            body {
+                background-color: #12141C;
+            }
+            
+            .request-container,
+            .tab-bar,
+            .tab-content,
+            .result-container {
+                background-color: var(--brave-dark);
+                border-color: rgba(255,255,255,0.1);
+            }
+            
+            .key-value-input,
+            .result-content {
+                background-color: #252833;
+                color: white;
+                border-color: rgba(255,255,255,0.1);
+            }
+            
+            .remove-btn {
+                background-color: #3A1D1D;
+                color: #EF9A9A;
+            }
+            
+            .remove-btn:hover {
+                background-color: #4D2727;
+            }
+            
+            .add-btn {
+                background-color: #1A2A3A;
+                color: #90CAF9;
+            }
+            
+            .add-btn:hover {
+                background-color: #1E3A5A;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span class="logo-icon">📬</span>
+                <span class="logo-text">cURL Generator</span>
+            </div>
+        </header>
+
+        <div class="request-container">
+            <select id="method" class="method-select">
+                <option value="GET" class="method-get">GET</option>
+                <option value="POST" class="method-post">POST</option>
+                <option value="PUT" class="method-put">PUT</option>
+                <option value="DELETE" class="method-delete">DELETE</option>
+                <option value="PATCH" class="method-patch">PATCH</option>
+            </select>
+            <input type="text" id="url" class="url-input" placeholder="Enter request URL (e.g., https://api.example.com/resource)">
+            <button id="generate" class="generate-btn">Generate</button>
+        </div>
+
+        <div class="tab-bar">
+            <div class="tab active" data-tab="params">Params</div>
+            <div class="tab" data-tab="headers">Headers</div>
+            <div class="tab" data-tab="body">Body</div>
+            <div class="tab" data-tab="cookies">Cookies</div>
+            <div class="tab" data-tab="auth">Auth</div>
+        </div>
+
+        <div id="params" class="tab-content active">
+            <div class="section-title">Query Parameters</div>
+            <div id="params-container" class="key-value-container">
+                <div class="key-value-row">
+                    <input type="text" class="key-value-input" placeholder="Key">
+                    <input type="text" class="key-value-input" placeholder="Value">
+                    <button class="remove-btn">×</button>
+                </div>
+            </div>
+            <button class="add-btn" id="add-param">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Add Param
+            </button>
+        </div>
+
+        <div id="headers" class="tab-content">
+            <div class="section-title">Request Headers</div>
+            <div id="headers-container" class="key-value-container">
+                <div class="key-value-row">
+                    <input type="text" class="key-value-input" placeholder="Header name (e.g., Content-Type)">
+                    <input type="text" class="key-value-input" placeholder="Header value (e.g., application/json)">
+                    <button class="remove-btn">×</button>
+                </div>
+            </div>
+            <button class="add-btn" id="add-header">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Add Header
+            </button>
+        </div>
+
+        <div id="body" class="tab-content">
+            <div class="section-title">Request Body</div>
+            <textarea id="request-body" class="key-value-input" style="width: 100%; height: 200px;" placeholder='{"key": "value"}'></textarea>
+        </div>
+
+        <div id="cookies" class="tab-content">
+            <div class="section-title">Cookies</div>
+            <div id="cookies-container" class="key-value-container">
+                <div class="key-value-row">
+                    <input type="text" class="key-value-input" placeholder="Cookie name (e.g., session_id)">
+                    <input type="text" class="key-value-input" placeholder="Cookie value">
+                    <button class="remove-btn">×</button>
+                </div>
+            </div>
+            <button class="add-btn" id="add-cookie">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Add Cookie
+            </button>
+        </div>
+
+        <div id="auth" class="tab-content">
+            <div class="section-title">Authentication</div>
+            <div class="key-value-row">
+                <select id="auth-type" class="key-value-input">
+                    <option value="none">None</option>
+                    <option value="basic">Basic Auth</option>
+                    <option value="bearer">Bearer Token</option>
+                    <option value="api-key">API Key</option>
+                </select>
+            </div>
+            <div id="auth-fields" style="margin-top: 15px;">
+                <!-- Dynamic fields will appear here based on auth type -->
+            </div>
+        </div>
+
+        <div class="result-container">
+            <div class="result-header">
+                <div class="result-title">Generated cURL Command</div>
+                <button class="copy-btn" id="copy-curl">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    Copy
+                </button>
+            </div>
+            <div class="result-content" id="curl-command">
+                // Your cURL command will appear here
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs and contents
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding content
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+
+            // Add row functionality
+            function setupAddButton(buttonId, containerId, placeholder1, placeholder2) {
+                document.getElementById(buttonId).addEventListener('click', function() {
+                    const container = document.getElementById(containerId);
+                    const newRow = document.createElement('div');
+                    newRow.className = 'key-value-row';
+                    newRow.innerHTML = `
+                        <input type="text" class="key-value-input" placeholder="${placeholder1}">
+                        <input type="text" class="key-value-input" placeholder="${placeholder2}">
+                        <button class="remove-btn">×</button>
+                    `;
+                    container.appendChild(newRow);
+                    
+                    // Add event listener to the new remove button
+                    newRow.querySelector('.remove-btn').addEventListener('click', function() {
+                        if (container.querySelectorAll('.key-value-row').length > 1) {
+                            container.removeChild(newRow);
+                        }
+                    });
+                });
+            }
+
+            // Initialize add buttons
+            setupAddButton('add-param', 'params-container', 'Key', 'Value');
+            setupAddButton('add-header', 'headers-container', 'Header name', 'Header value');
+            setupAddButton('add-cookie', 'cookies-container', 'Cookie name', 'Cookie value');
+
+            // Initialize remove buttons for existing rows
+            document.querySelectorAll('.remove-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const row = this.parentNode;
+                    const container = row.parentNode;
+                    if (container.querySelectorAll('.key-value-row').length > 1) {
+                        container.removeChild(row);
+                    }
+                });
+            });
+
+            // Auth type switcher
+            document.getElementById('auth-type').addEventListener('change', function() {
+                const authFields = document.getElementById('auth-fields');
+                const type = this.value;
+                
+                authFields.innerHTML = '';
+                
+                if (type === 'basic') {
+                    authFields.innerHTML = `
+                        <div class="key-value-row">
+                            <input type="text" class="key-value-input" placeholder="Username">
+                            <input type="password" class="key-value-input" placeholder="Password">
+                        </div>
+                    `;
+                } else if (type === 'bearer') {
+                    authFields.innerHTML = `
+                        <div class="key-value-row">
+                            <input type="text" class="key-value-input" placeholder="Token" style="flex: 1">
+                        </div>
+                    `;
+                } else if (type === 'api-key') {
+                    authFields.innerHTML = `
+                        <div class="key-value-row">
+                            <input type="text" class="key-value-input" placeholder="Key name (e.g., X-API-KEY)">
+                            <input type="text" class="key-value-input" placeholder="Key value">
+                        </div>
+                        <div class="key-value-row" style="margin-top: 10px;">
+                            <select class="key-value-input">
+                                <option value="header">Send in Header</option>
+                                <option value="query">Send in Query Params</option>
+                            </select>
+                        </div>
+                    `;
+                }
+            });
+
+            // Generate cURL command
+            document.getElementById('generate').addEventListener('click', function() {
+                const method = document.getElementById('method').value;
+                let url = document.getElementById('url').value.trim();
+                
+                if (!url) {
+                    alert('Please enter a URL');
+                    return;
+                }
+
+                // Process query parameters
+                const params = [];
+                document.querySelectorAll('#params-container .key-value-row').forEach(row => {
+                    const inputs = row.querySelectorAll('.key-value-input');
+                    const key = inputs[0].value.trim();
+                    const value = inputs[1].value.trim();
+                    if (key) {
+                        params.push(`${key}=${encodeURIComponent(value)}`);
+                    }
+                });
+
+                // Add query parameters to URL
+                if (params.length > 0) {
+                    url += (url.includes('?') ? '&' : '?') + params.join('&');
+                }
+
+                let curl = `curl -X ${method} \\\n  '${url}'`;
+
+                // Add headers
+                document.querySelectorAll('#headers-container .key-value-row').forEach(row => {
+                    const inputs = row.querySelectorAll('.key-value-input');
+                    const key = inputs[0].value.trim();
+                    const value = inputs[1].value.trim();
+                    if (key && value) {
+                        curl += ` \\\n  -H '${key}: ${value}'`;
+                    }
+                });
+
+                // Add cookies
+                const cookies = [];
+                document.querySelectorAll('#cookies-container .key-value-row').forEach(row => {
+                    const inputs = row.querySelectorAll('.key-value-input');
+                    const name = inputs[0].value.trim();
+                    const value = inputs[1].value.trim();
+                    if (name && value) {
+                        cookies.push(`${name}=${value}`);
+                    }
+                });
+
+                if (cookies.length > 0) {
+                    curl += ` \\\n  -H 'Cookie: ${cookies.join('; ')}'`;
+                }
+
+                // Add authentication
+                const authType = document.getElementById('auth-type').value;
+                if (authType === 'basic') {
+                    const inputs = document.querySelectorAll('#auth-fields .key-value-input');
+                    const username = inputs[0].value.trim();
+                    const password = inputs[1].value.trim();
+                    if (username && password) {
+                        curl += ` \\\n  -u '${username}:${password}'`;
+                    }
+                } else if (authType === 'bearer') {
+                    const token = document.querySelector('#auth-fields .key-value-input').value.trim();
+                    if (token) {
+                        curl += ` \\\n  -H 'Authorization: Bearer ${token}'`;
+                    }
+                } else if (authType === 'api-key') {
+                    const inputs = document.querySelectorAll('#auth-fields .key-value-input');
+                    const keyName = inputs[0].value.trim();
+                    const keyValue = inputs[1].value.trim();
+                    const sendIn = inputs[2].value;
+                    
+                    if (keyName && keyValue) {
+                        if (sendIn === 'header') {
+                            curl += ` \\\n  -H '${keyName}: ${keyValue}'`;
+                        } else {
+                            curl += ` \\\n  '${url}${url.includes('?') ? '&' : '?'}${keyName}=${keyValue}'`;
+                        }
+                    }
+                }
+
+                // Add body for POST, PUT, PATCH
+                const requestBody = document.getElementById('request-body').value.trim();
+                if ((method === 'POST' || method === 'PUT' || method === 'PATCH') && requestBody) {
+                    try {
+                        JSON.parse(requestBody); // Validate JSON
+                        curl += ` \\\n  -d '${requestBody}'`;
+                    } catch (e) {
+                        alert('Invalid JSON in request body');
+                        return;
+                    }
+                }
+
+                document.getElementById('curl-command').textContent = curl;
+            });
+
+            // Copy to clipboard
+            document.getElementById('copy-curl').addEventListener('click', function() {
+                const curlCommand = document.getElementById('curl-command').textContent;
+                navigator.clipboard.writeText(curlCommand).then(() => {
+                    const originalText = this.innerHTML;
+                    this.innerHTML = `
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Copied!
+                    `;
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                    }, 2000);
+                });
+            });
+
+            // Method color change
+            document.getElementById('method').addEventListener('change', function() {
+                const colors = {
+                    'GET': '#4CAF50',
+                    'POST': '#2196F3',
+                    'PUT': '#FF9800',
+                    'DELETE': '#F44336',
+                    'PATCH': '#9C27B0'
+                };
+                this.style.color = colors[this.value];
+            });
+
+            // Initialize method color
+            document.getElementById('method').dispatchEvent(new Event('change'));
+            
+            // Initialize auth fields
+            document.getElementById('auth-type').dispatchEvent(new Event('change'));
+        });
+    </script>
+</body>
+</html>
