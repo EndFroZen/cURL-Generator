@@ -45,17 +45,6 @@ go run server.go
 
 Open your browser at [http://localhost:3000](http://localhost:3000)
 
----
-
-## Project Roadmap
-
-- [x] Basic cURL builder
-- [ ] Support for authentication (Bearer Token, Basic Auth)
-- [ ] Export as Postman Collection
-- [ ] Dark mode UI
-- [ ] Mobile-friendly layout
-
----
 
 ## Contributing
 
