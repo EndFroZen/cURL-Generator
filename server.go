@@ -17,6 +17,7 @@ func main() {
 	})
 	app.Use(logger.New())
 	app.Static("/css","./css")
+	app.Static("/scr","./script")
 	app.Get("/",func (c *fiber.Ctx)error  {
 		return c.Render("poster",fiber.Map{
 			"title":"welcomechanachol",
