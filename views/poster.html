@@ -140,5 +140,23 @@
     </div>
 
     <script src="/scr/poster.js"></script>
+    <script>
+        let typingTimer;
+        const typingDelay = 2540; 
+        const textarea = document.getElementById('request-body');
+        
+        textarea.addEventListener('input', () => {
+          clearTimeout(typingTimer);
+          typingTimer = setTimeout(() => {
+            try {
+              const parsed = JSON.parse(textarea.value);
+              const formatted = JSON.stringify(parsed, null, 2); 
+              textarea.value = formatted;
+            } catch (e) {
+              
+            }
+          }, typingDelay);
+        });
+        </script>
 </body>
 </html>
