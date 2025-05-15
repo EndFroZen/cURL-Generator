@@ -58,8 +58,20 @@
             <div class="section-title">Request Headers</div>
             <div id="headers-container" class="key-value-container">
                 <div class="key-value-row">
-                    <input type="text" class="key-value-input" placeholder="Header name (e.g., Content-Type)">
-                    <input type="text" class="key-value-input" placeholder="Header value (e.g., application/json)">
+                    <input type="text" class="key-value-input" placeholder="Header name (e.g., Content-Type)" list="header-names">
+                        <datalist id="header-names">
+                            <option value="Content-Type">
+                            <option value="Authorization">
+                            <option value="Accept">
+                        </datalist>
+
+                        <input type="text" class="key-value-input" placeholder="Header value (e.g., application/json)" list="header-values">
+                            <datalist id="header-values">
+                                <option value="application/json">
+                                <option value="application/xml">
+                                <option value="text/plain">
+                            </datalist>
+
                     <button class="remove-btn">×</button>
                 </div>
             </div>
