@@ -1,12 +1,12 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Tab switching
     const tabs = document.querySelectorAll('.tab');
     tabs.forEach(tab => {
-        tab.addEventListener('click', function() {
+        tab.addEventListener('click', function () {
             // Remove active class from all tabs and contents
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
+
             // Add active class to clicked tab and corresponding content
             this.classList.add('active');
             const tabId = this.getAttribute('data-tab');
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add row functionality
     function setupAddButton(buttonId, containerId, placeholder1, placeholder2) {
-        document.getElementById(buttonId).addEventListener('click', function() {
+        document.getElementById(buttonId).addEventListener('click', function () {
             const container = document.getElementById(containerId);
             const newRow = document.createElement('div');
             newRow.className = 'key-value-row';
@@ -26,9 +26,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button class="remove-btn">×</button>
             `;
             container.appendChild(newRow);
-            
+
             // Add event listener to the new remove button
-            newRow.querySelector('.remove-btn').addEventListener('click', function() {
+            newRow.querySelector('.remove-btn').addEventListener('click', function () {
                 if (container.querySelectorAll('.key-value-row').length > 1) {
                     container.removeChild(newRow);
                 }
@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize remove buttons for existing rows
     document.querySelectorAll('.remove-btn').forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             const row = this.parentNode;
             const container = row.parentNode;
             if (container.querySelectorAll('.key-value-row').length > 1) {
@@ -53,12 +53,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Auth type switcher
-    document.getElementById('auth-type').addEventListener('change', function() {
+    document.getElementById('auth-type').addEventListener('change', function () {
         const authFields = document.getElementById('auth-fields');
         const type = this.value;
-        
+
         authFields.innerHTML = '';
-        
+
         if (type === 'basic') {
             authFields.innerHTML = `
                 <div class="key-value-row">
@@ -89,10 +89,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Generate cURL command
-    document.getElementById('generate').addEventListener('click', function() {
+    document.getElementById('generate').addEventListener('click', function () {
         const method = document.getElementById('method').value;
         let url = document.getElementById('url').value.trim();
-        
+
         if (!url) {
             alert('Please enter a URL');
             return;
@@ -114,7 +114,14 @@ document.addEventListener('DOMContentLoaded', function() {
             url += (url.includes('?') ? '&' : '?') + params.join('&');
         }
 
-        let curl = `curl -X ${method} \\\n  '${url}'`;
+        let curl = '';  // ประกาศตัวแปร curl นอก if-else
+
+        const onos = document.getElementById("os-select").value;
+        if (onos === "window") {
+            curl = `curl.exe -X ${method} \\\n  '${url}'`;
+        } else {
+            curl = `curl -X ${method} \\\n  '${url}'`;
+        }
 
         // Add headers
         document.querySelectorAll('#headers-container .key-value-row').forEach(row => {
@@ -145,27 +152,36 @@ document.addEventListener('DOMContentLoaded', function() {
         const authType = document.getElementById('auth-type').value;
         if (authType === 'basic') {
             const inputs = document.querySelectorAll('#auth-fields .key-value-input');
-            const username = inputs[0].value.trim();
-            const password = inputs[1].value.trim();
+            const username = inputs[0]?.value.trim() || '';
+            const password = inputs[1]?.value.trim() || '';
             if (username && password) {
                 curl += ` \\\n  -u '${username}:${password}'`;
             }
         } else if (authType === 'bearer') {
-            const token = document.querySelector('#auth-fields .key-value-input').value.trim();
+            const token = document.querySelector('#auth-fields .key-value-input')?.value.trim() || '';
             if (token) {
                 curl += ` \\\n  -H 'Authorization: Bearer ${token}'`;
             }
         } else if (authType === 'api-key') {
             const inputs = document.querySelectorAll('#auth-fields .key-value-input');
-            const keyName = inputs[0].value.trim();
-            const keyValue = inputs[1].value.trim();
-            const sendIn = inputs[2].value;
-            
+            const keyName = inputs[0]?.value.trim() || '';
+            const keyValue = inputs[1]?.value.trim() || '';
+            const sendIn = inputs[2]?.value || 'header';
+
             if (keyName && keyValue) {
                 if (sendIn === 'header') {
                     curl += ` \\\n  -H '${keyName}: ${keyValue}'`;
-                } else {
-                    curl += ` \\\n  '${url}${url.includes('?') ? '&' : '?'}${keyName}=${keyValue}'`;
+                } else if (sendIn === 'query') {
+                    // ถ้าเป็น query parameter ให้ต่อ URL ใหม่และแก้ curl อีกที
+                    // ลบ query string เก่าออกก่อน
+                    const baseUrl = url.split('?')[0];
+                    const existingParams = url.includes('?') ? url.split('?')[1] : '';
+                    let newParams = existingParams ? existingParams + `&${keyName}=${encodeURIComponent(keyValue)}` : `${keyName}=${encodeURIComponent(keyValue)}`;
+                    const newUrl = `${baseUrl}?${newParams}`;
+
+                    // เปลี่ยน URL ในคำสั่ง curl
+                    curl = curl.replace(url, newUrl);
+                    url = newUrl; // อัพเดต url ตัวแปรไว้ใช้ต่อ
                 }
             }
         }
@@ -185,25 +201,34 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('curl-command').textContent = curl;
     });
 
+
     // Copy to clipboard
-    document.getElementById('copy-curl').addEventListener('click', function() {
-        const curlCommand = document.getElementById('curl-command').textContent;
+    document.getElementById('copy-curl').addEventListener('click', function () {
+        let curlCommand = document.getElementById('curl-command').textContent;
+
+        curlCommand = curlCommand
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line)
+            .join(' ');
+
         navigator.clipboard.writeText(curlCommand).then(() => {
             const originalText = this.innerHTML;
             this.innerHTML = `
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                Copied!
-            `;
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Copied!
+        `;
             setTimeout(() => {
                 this.innerHTML = originalText;
             }, 2000);
         });
     });
 
+
     // Method color change
-    document.getElementById('method').addEventListener('change', function() {
+    document.getElementById('method').addEventListener('change', function () {
         const colors = {
             'GET': '#4CAF50',
             'POST': '#2196F3',
@@ -216,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize method color
     document.getElementById('method').dispatchEvent(new Event('change'));
-    
+
     // Initialize auth fields
     document.getElementById('auth-type').dispatchEvent(new Event('change'));
 });

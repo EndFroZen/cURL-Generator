@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📬 cURL Generator</title>
     <link rel="stylesheet" href="/css/poster.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono&display=swap"
+        rel="stylesheet">
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -24,7 +27,8 @@
                 <option value="DELETE" class="method-delete">DELETE</option>
                 <option value="PATCH" class="method-patch">PATCH</option>
             </select>
-            <input type="text" id="url" class="url-input" placeholder="Enter request URL (e.g., https://api.example.com/resource)">
+            <input type="text" id="url" class="url-input"
+                placeholder="Enter request URL (e.g., https://api.example.com/resource)">
             <button id="generate" class="generate-btn">Generate</button>
         </div>
 
@@ -58,19 +62,21 @@
             <div class="section-title">Request Headers</div>
             <div id="headers-container" class="key-value-container">
                 <div class="key-value-row">
-                    <input type="text" class="key-value-input" placeholder="Header name (e.g., Content-Type)" list="header-names">
-                        <datalist id="header-names">
-                            <option value="Content-Type">
-                            <option value="Authorization">
-                            <option value="Accept">
-                        </datalist>
+                    <input type="text" class="key-value-input" placeholder="Header name (e.g., Content-Type)"
+                        list="header-names">
+                    <datalist id="header-names">
+                        <option value="Content-Type">
+                        <option value="Authorization">
+                        <option value="Accept">
+                    </datalist>
 
-                        <input type="text" class="key-value-input" placeholder="Header value (e.g., application/json)" list="header-values">
-                            <datalist id="header-values">
-                                <option value="application/json">
-                                <option value="application/xml">
-                                <option value="text/plain">
-                            </datalist>
+                    <input type="text" class="key-value-input" placeholder="Header value (e.g., application/json)"
+                        list="header-values">
+                    <datalist id="header-values">
+                        <option value="application/json">
+                        <option value="application/xml">
+                        <option value="text/plain">
+                    </datalist>
 
                     <button class="remove-btn">×</button>
                 </div>
@@ -86,7 +92,8 @@
 
         <div id="body" class="tab-content">
             <div class="section-title">Request Body</div>
-            <textarea id="request-body" class="key-value-input" style="width: 100%; height: 200px;" placeholder='{"key": "value"}'></textarea>
+            <textarea id="request-body" class="key-value-input" style="width: 100%; height: 200px;"
+                placeholder='{"key": "value"}'></textarea>
         </div>
 
         <div id="cookies" class="tab-content">
@@ -125,38 +132,143 @@
         <div class="result-container">
             <div class="result-header">
                 <div class="result-title">Generated cURL Command</div>
-                <button class="copy-btn" id="copy-curl">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                    </svg>
-                    Copy
-                </button>
+                <div class="result-btn" style="display: flex; gap: 10px;">
+                    <button class="copy-btn" id="copy-curl">📃 Copy</button>
+                    <button class="run-btn" id="run-curl" onclick=runCommand()>⚙️ Run</button>
+                    <select id="os-select" style="margin-top: 10px; padding: 5px;">
+                        <option value="window">Windows</option>
+                        <option value="ubuntu">Ubuntu/Linux</option>
+                        <option value="apple">macOS (Apple)</option>
+                    </select>
+                </div>
             </div>
             <div class="result-content" id="curl-command">
                 // Your cURL command will appear here
             </div>
+            <pre id="output" style="background:#111; color:#ddd; padding:10px; margin-top:10px; border-radius:5px; 
+            white-space:pre-wrap; word-break:break-word; overflow:auto; font-family:monospace;"
+                onchange=helloworld()></pre>
+
+
         </div>
     </div>
 
     <script src="/scr/poster.js"></script>
     <script>
-        let typingTimer;
-        const typingDelay = 2540; 
-        const textarea = document.getElementById('request-body');
-        
-        textarea.addEventListener('input', () => {
-          clearTimeout(typingTimer);
-          typingTimer = setTimeout(() => {
-            try {
-              const parsed = JSON.parse(textarea.value);
-              const formatted = JSON.stringify(parsed, null, 2); 
-              textarea.value = formatted;
-            } catch (e) {
-              
+        function formatOutput(output) {
+            const jsonStart = output.indexOf('{');
+            const jsonEnd = output.lastIndexOf('}');
+            let jsonPart = null;
+            let logPart = output;
+
+            if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+                jsonPart = output.slice(jsonStart, jsonEnd + 1).trim();
+                logPart = (output.slice(0, jsonStart) + output.slice(jsonEnd + 1)).trim();
             }
-          }, typingDelay);
+
+            let result = '';
+
+            // แสดง log ส่วนที่ไม่ใช่ JSON (escape HTML)
+            if (logPart) {
+                result += `<pre style="white-space:pre-wrap;color:#aaa; background:#111; padding:8px;">${escapeHTML(logPart)}</pre>`;
+            }
+
+            // แสดง JSON แบบไฮไลต์ ถ้า parse ได้
+            if (jsonPart) {
+                try {
+                    const json = JSON.parse(jsonPart);
+                    const pretty = JSON.stringify(json, null, 2);
+                    result += `<pre style="white-space:pre-wrap;color:#0f0; background:#222; padding:8px;">${highlightJSON(pretty)}</pre>`;
+                } catch (e) {
+                    // ถ้า JSON ผิด ก็แสดงแบบ escape เฉยๆ
+                    result += `<pre style="white-space:pre-wrap;color:#f00;">${escapeHTML(jsonPart)}</pre>`;
+                }
+            }
+
+            // ถ้าไม่มี JSON เลย แสดง output ดิบแบบ escape ปกติ
+            if (!jsonPart && !logPart) {
+                result = `<pre style="white-space:pre-wrap;color:#0f0;">${escapeHTML(output)}</pre>`;
+            }
+
+            return result;
+        }
+
+
+        function highlightJSON(jsonString) {
+            return jsonString
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|\b\d+\.?\d*\b)/g, match => {
+                    let cls = 'number';
+                    if (/^"/.test(match)) {
+                        cls = /:$/.test(match) ? 'key' : 'string';
+                    } else if (/true|false/.test(match)) {
+                        cls = 'boolean';
+                    } else if (/null/.test(match)) {
+                        cls = 'null';
+                    }
+                    return `<span class="${cls}">${match}</span>`;
+                });
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => {
+                const chars = { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' };
+                return chars[tag] || tag;
+            });
+        }
+
+        function runCommand() {
+            let curlCommand = document.getElementById('curl-command').textContent;
+
+            // รวมบรรทัด curl เป็นบรรทัดเดียว
+            curlCommand = curlCommand
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line)
+                .join(' ');
+
+            console.log(curlCommand);
+
+            const os = document.getElementById('os-select').value;
+
+            fetch(`/curlpost/${os}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: curlCommand })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    const output = data.error
+                        ? `❌ Error:\n${data.message}\n\n${data.output}`
+                        : data.output;
+                    console.log(output);
+                    document.getElementById('output').innerHTML = formatOutput(output);
+                })
+                .catch(err => {
+                    document.getElementById('output').textContent = `❌ Request failed: ${err}`;
+                });
+        }
+
+        let typingTimer;
+        const typingDelay = 1000;
+        const textarea = document.getElementById('request-body');
+
+        textarea.addEventListener('input', () => {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(() => {
+                try {
+                    const parsed = JSON.parse(textarea.value);
+                    const formatted = JSON.stringify(parsed, null, 2);
+                    textarea.value = formatted;
+                } catch (e) {
+                    // ไม่ต้องทำอะไร ถ้า JSON ไม่ valid
+                }
+            }, typingDelay);
         });
-        </script>
+    </script>
+
 </body>
+
 </html>
