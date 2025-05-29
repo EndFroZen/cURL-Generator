@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/template/html/v2"
+	"github.com/google/shlex"
 )
 
 func main() {
@@ -25,8 +26,7 @@ func main() {
 		return c.Render("poster", nil)
 	})
 	app.Post("/curlpost/:onos", func(c *fiber.Ctx) error {
-		onos := c.Params("onos")
-		fmt.Println(onos)
+		
 		type Request struct {
 			Command string `json:"command"`
 		}
@@ -36,23 +36,26 @@ func main() {
 			return c.Status(400).SendString("Invalid request")
 		}
 
-		// ตรวจสอบว่าเป็นคำสั่ง curl เท่านั้น
-		// if !strings.HasPrefix(body.Command, "curl ") {
-		// 	return c.Status(400).SendString("Only curl commands are allowed")
-		// }
-		fmt.Println(body.Command)
+		// fmt.Println("Raw command:", body.Command)
 
-		var cmd *exec.Cmd
-
+		// 🔧 ลบ backslash ที่ใช้แบ่งบรรทัด
 		clean := strings.ReplaceAll(body.Command, "\\", "")
-		clean = strings.ReplaceAll(clean, "'", "")
+		fmt.Println("Cleaned command:", clean)
 
-		// แปลงเป็น slice args
-		args := strings.Fields(clean)
+		// 🔐 ใช้ shlex เพื่อ parse command อย่างปลอดภัย
+		args, err := shlex.Split(clean)
+		if err != nil {
+			return c.Status(400).SendString("Failed to parse command")
+		}
 
-		// ใช้ exec.Command
-		cmd = exec.Command(args[0], args[1:]...)
+		if len(args) == 0 {
+			return c.Status(400).SendString("Empty command")
+		}
 
+		// ✅ สร้างคำสั่งจาก args ที่ parse แล้ว
+		cmd := exec.Command(args[0], args[1:]...)
+
+		// ⏳ รันคำสั่ง
 		out, err := cmd.CombinedOutput()
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{

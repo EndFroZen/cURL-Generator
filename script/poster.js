@@ -205,26 +205,28 @@ document.addEventListener('DOMContentLoaded', function () {
     // Copy to clipboard
     document.getElementById('copy-curl').addEventListener('click', function () {
         let curlCommand = document.getElementById('curl-command').textContent;
-
+    
         curlCommand = curlCommand
             .split('\n')
-            .map(line => line.trim())
+            .map(line => line.replace(/\\\s*$/, '').trim()) // remove trailing backslashes
             .filter(line => line)
             .join(' ');
-
+    
         navigator.clipboard.writeText(curlCommand).then(() => {
             const originalText = this.innerHTML;
             this.innerHTML = `
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-            Copied!
-        `;
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Copied!
+            `;
             setTimeout(() => {
                 this.innerHTML = originalText;
             }, 2000);
         });
     });
+    
+
 
 
     // Method color change
